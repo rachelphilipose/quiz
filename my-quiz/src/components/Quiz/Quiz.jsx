@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { resultInitialState } from "../../constants";
 import "./Quiz.scss";
+import Result from '../Result/Result';
 
 
 const Quiz = ({ questions }) => {
@@ -11,8 +12,9 @@ const Quiz = ({ questions }) => {
     const [answer, setAnswer] = useState(null);
     const [result, setResult] = useState(resultInitialState);
     const [showResult, setShowResult] = useState(false);
+    const [inputAnswer, setInputAnswer] = useState('');
 
-    const { question, choices, correctAnswer } = questions[currentQuestion];
+    const { question, choices, correctAnswer, type } = questions[currentQuestion];
 
     
 
@@ -36,7 +38,7 @@ const Quiz = ({ questions }) => {
                 correctAnswers: prev.correctAnswers +1
             } : {
                 ...prev,
-                wrongAnswers: prev.correctAnswers +1
+                wrongAnswers: prev.wrongAnswers +1
             }
 
         );
@@ -53,46 +55,64 @@ const Quiz = ({ questions }) => {
         setShowResult(false);
     }
 
+    const handleInputChange = (evt) => {
+
+        setInputAnswer(evt.target.value);
+
+        if (evt.target.value === correctAnswer){
+            setAnswer(true);
+        } else{
+            setAnswer(false);
+        }
+    }
+
+    const getAnswerUI = () => {
+
+        if  (type === 'FIB') {
+            return <input value = {inputAnswer} onChange= {handleInputChange}/>;
+        }
+
+        return (
+            <ul>
+            {choices.map((answer, index) => (
+                    <li 
+                        onClick={() => onAnswerClick(answer, index)}
+                        key={answer}
+                        className={answerIdx === index ? 'selected-answer' : null }>
+                            {answer}
+                    </li>
+                ))}
+        </ul>
+        );
+    }
+
     return ( 
     <div className='quiz-container'> 
         {!showResult ? (<>
             <span className= "active-question-no">{currentQuestion + 1}</span>
             <span className= "total-question">/{questions.length}</span>
             <h2>{question}</h2>
-            <ul>
-                {choices.map((answer, index) => (
-                        <li 
-                            onClick={() => onAnswerClick(answer, index)}
-                            key={answer}
-                            className={answerIdx === index ? 'selected-answer' : null }>
-                                {answer}
-                        </li>
-                    ))}
-            </ul>
+
+            {getAnswerUI()}
+
             <div className="footer">
                 
-                <button onClick={onClickNext} disabled={answerIdx === null}>
+                <button 
+                onClick={onClickNext} 
+                disabled={answerIdx === null && !inputAnswer}>
+
                     {currentQuestion == questions.length - 1 ? "Finish": "Next"}
                 </button>
             </div>
         </>
-        ) : <div className="result">
-                <h3>Result</h3>
-                <p>
-                    Total Questions: <span>{questions.length}</span>
-                </p>
-                <p>
-                    Total Score: <span>{result.score}</span>
-                </p>
-                <p>
-                    Total Correct Answers: <span>{result.correctAnswers}</span>
-                </p>
-                <p>
-                    Total Wrong Answers: <span>{result.wrongAnswers}</span>
-                </p>    
-                <button onClick = {onTryAgain}>Try Again</button>                                            
-            </div>}
-            </div>
+        ) : (
+        <Result 
+            result={result}
+            onTryAgain= {onTryAgain}
+            totalQuestions= {questions.length}
+            />
+        )}
+    </div>
     
     );
 };
